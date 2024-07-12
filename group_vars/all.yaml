@@ -1,0 +1,10 @@
+---
+container_dir: ""
+dir_with_deb: /tmp/cryptopro/linux-amd64_deb
+tmp_dir: /tmp/cryptopro/
+cert_dir: ""
+# Escape every slash ("\") by adding one extra slash ("\") 
+container_name: ""
+user_name: ""
+user_cert: ""
+root_cert: []

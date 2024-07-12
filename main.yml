@@ -1,0 +1,128 @@
+---
+- hosts: all
+  become: true
+  become_user: root
+  vars:
+    user: "root"
+    password: "toor"
+  tasks:
+
+    - name: Creates directory
+      file:
+        path: "{{tmp_dir}}"
+        state: directory
+      tags: 
+        - install
+
+    - name: Unpacking CryptoPro
+      unarchive:
+        src: ../files/linux-amd64_deb.tgz 
+        dest: "{{tmp_dir}}"
+      tags:
+        - install
+        
+    - name: Install a lsb-cprocsp-base_5.0.13000-7_all.deb package
+      become: yes
+      apt:
+        deb: /tmp/cryptopro/linux-amd64_deb/lsb-cprocsp-base_5.0.13000-7_all.deb
+      tags:
+        - install
+        
+    - name: Install a lsb-cprocsp-rdr-64_5.0.13000-7_amd64.deb package
+      become: yes
+      apt:
+        deb: /tmp/cryptopro/linux-amd64_deb/lsb-cprocsp-rdr-64_5.0.13000-7_amd64.deb
+      tags:
+        - install
+        
+    - name: Install a llsb-cprocsp-kc1-64_5.0.13000-7_amd64.deb package
+      become: yes
+      apt:
+        deb: /tmp/cryptopro/linux-amd64_deb/lsb-cprocsp-kc1-64_5.0.13000-7_amd64.deb
+      tags:
+        - install
+
+    - name: Install a lsb-cprocsp-capilite-64_5.0.13000-7_amd64.deb package
+      become: yes
+      apt:
+        deb: /tmp/cryptopro/linux-amd64_deb/lsb-cprocsp-capilite-64_5.0.13000-7_amd64.deb
+      tags:
+        - install
+        
+    - name: Install a lsb-cprocsp-pkcs11-64_5.0.13000-7_amd64.deb package
+      become: yes
+      apt:
+        deb: /tmp/cryptopro/linux-amd64_deb/lsb-cprocsp-pkcs11-64_5.0.13000-7_amd64.deb
+      tags:
+        - install   
+        
+    - name: Install a cprocsp-rdr-gui-gtk-64_5.0.13000-7_amd64.deb package
+      become: yes
+      apt:
+        deb: /tmp/cryptopro/linux-amd64_deb/cprocsp-rdr-gui-gtk-64_5.0.13000-7_amd64.deb
+      tags:
+        - install       
+
+    - name: Install a cprocsp-cptools-gtk-64_5.0.13000-7_amd64.deb package
+      become: yes
+      apt:
+        deb: /tmp/cryptopro/linux-amd64_deb/cprocsp-cptools-gtk-64_5.0.13000-7_amd64.deb
+      tags:
+        - install
+
+    - name: Create dirs for user container on remote host
+      become: yes
+      file:
+        path: "/var/opt/cprocsp/keys/{{user_name}}"
+        state: directory
+        owner: "{{user_name}}" 
+      when: container_name != ""
+      tags:
+        - install_certificate
+
+
+    - name: Copy container's files to remote host
+      become: yes
+      copy:
+        src: ../files/{{container_dir}}
+        dest: "/var/opt/cprocsp/keys/{{user_name}}"
+        owner: "{{user_name}}"
+      when: container_dir != ""
+      tags:
+        - install_certificate
+
+    - name: Copy certs to remote host
+      copy:
+        src: ../files/certs
+        dest: "{{tmp_dir}}"
+      when: cert_dir != ""
+      tags:
+        - install_certificate
+
+    - name: Install root cert(s)
+      become: yes
+      shell: /opt/cprocsp/bin/amd64/certmgr -inst -all -store mroot -file {{item}}
+      with_items: "{{root_cert}}"
+      when: root_cert is defined
+      tags:
+        - install_certificate
+
+
+    - name: Install user cert and link to container
+      become: yes
+      become_user: "{{user_name}}"
+      shell: /opt/cprocsp/bin/amd64/certmgr -inst -file {{user_cert}} -cont {{container_name}} 
+      when: user_cert != ""
+      tags:
+        - install_certificate
+
+    - name: Clean tmp dir
+      file:
+        path: "{{tmp_dir}}"
+        state: absent
+      tags:
+        - install
+          #- name: Clean tmp dir 
+          #  become: yes
+          #  files:
+      #  shell: rm -rf {{tmp_dir}}

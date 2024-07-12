@@ -1,0 +1,8 @@
+[all]
+172.18.58.151
+
+[all:vars]
+ansible_connection=ssh
+ansible_user=kos
+ansible_ssh_pass=22
+ansible_sudo_pass=22
